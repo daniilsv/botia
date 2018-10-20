@@ -1,6 +1,6 @@
 'use strict';
 const router = require('express').Router();
-
+var rp = require('request-promise');
 const Graph = global.db.collection("graph");
 let users = {};
 router.all('/call', async function (req, res, next) {
@@ -37,7 +37,20 @@ router.all('/digits', async function (req, res, next) {
     const next_id = cur.children[resp];
     cur = await Graph.findOne({ _id: next_id });
     users[req.body.mediaInteractionNotification.callParticipant] = cur;
-
+    if (cur.method === "post") {
+        await rp({
+            method: 'POST',
+            uri: cur.url,
+            headers: JSON.parse(cur.header),
+            body: JSON.parse(cur.body),
+            json: true
+        });
+    } else if (cur.method === "get") {
+        await rp({
+            uri: cur.url,
+            json: true
+        });
+    }
     if (cur.finish === true) {
         delete users[req.body.mediaInteractionNotification.callParticipant];
         res.send({
