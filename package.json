@@ -1,0 +1,11 @@
+{
+  "main": "start",
+  "scripts": {
+    "dev": "nodemon ./start.js"
+  },
+  "dependencies": {
+    "express": "^4.16.4",
+    "mongoose": "^5.3.2",
+    "websocket": "^1.0.28"
+  }
+}
