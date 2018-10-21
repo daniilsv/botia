@@ -3,10 +3,10 @@ const router = require('express').Router();
 var rp = require('request-promise');
 const Graph = global.db.collection("graph");
 let users = {};
+const ObjectID = require('mongodb').ObjectID;
 router.all('/call', async function (req, res, next) {
     console.log(req.body, req.params);
     let start = await Graph.findOne({ start: true });
-    console.log(start);
     users[req.body.callEventNotification.calledParticipant] = start;
     res.send({
         "action": {
@@ -31,11 +31,14 @@ router.all('/call', async function (req, res, next) {
 router.all('/digits', async function (req, res, next) {
     console.log(req.body, req.params);
     let cur = users[req.body.mediaInteractionNotification.callParticipant];
-    if (cur === undefined) return;
+    if (cur === undefined) { console.log("1"); return; }
+    cur = await Graph.findOne({ _id: ObjectID(cur._id) });
     const resp = req.body.mediaInteractionNotification.mediaInteractionResult;
-    if (resp === '') return;
+    if (resp === '') { console.log("2"); return; }
     const next_id = cur.children[resp];
-    cur = await Graph.findOne({ _id: next_id });
+    cur = await Graph.findOne({ _id: ObjectID(next_id) });
+    if (!cur)
+        cur = await Graph.findOne({ start: true });
     users[req.body.mediaInteractionNotification.callParticipant] = cur;
     if (cur.method === "post") {
         await rp({
